@@ -1,1 +1,487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .form-container {
+            padding: 40px;
+            position: relative;
+        }
+
+        .form-container.hidden {
+            display: none;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: #333;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            color: #555;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group input.error {
+            border-color: #e74c3c;
+            background: #fdf2f2;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .links {
+            text-align: center;
+        }
+
+        .links a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            margin: 0 10px;
+            transition: color 0.3s ease;
+        }
+
+        .links a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+            display: none;
+        }
+
+        .back-arrow {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            cursor: pointer;
+            color: #667eea;
+            font-size: 24px;
+            transition: color 0.3s ease;
+        }
+
+        .back-arrow:hover {
+            color: #764ba2;
+        }
+
+        .form-title {
+            text-align: center;
+            color: #333;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+
+        .password-requirements {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                margin: 10px;
+            }
+            
+            .form-container {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Formulario de Login -->
+        <div id="loginForm" class="form-container">
+            <div class="logo">
+                <h1>🔐 Mi App</h1>
+            </div>
+            
+            <div id="loginSuccess" class="success-message"></div>
+            
+            <form>
+                <div class="form-group">
+                    <label for="loginEmail">Email o Usuario</label>
+                    <input type="text" id="loginEmail" name="email" required>
+                    <div class="error-message" id="loginEmailError"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="loginPassword">Contraseña</label>
+                    <input type="password" id="loginPassword" name="password" required>
+                    <div class="error-message" id="loginPasswordError"></div>
+                </div>
+                
+                <button type="submit" class="btn">Iniciar Sesión</button>
+            </form>
+            
+            <div class="links">
+                <a href="#" onclick="showRegisterForm()">Crear cuenta</a>
+                <a href="#" onclick="showForgotForm()">¿Olvidaste tu contraseña?</a>
+            </div>
+        </div>
+
+        <!-- Formulario de Registro -->
+        <div id="registerForm" class="form-container hidden">
+            <div class="back-arrow" onclick="showLoginForm()">←</div>
+            <div class="form-title">Crear Cuenta</div>
+            
+            <div id="registerSuccess" class="success-message"></div>
+            
+            <form>
+                <div class="form-group">
+                    <label for="registerName">Nombre Completo</label>
+                    <input type="text" id="registerName" name="name" required>
+                    <div class="error-message" id="registerNameError"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" name="email" required>
+                    <div class="error-message" id="registerEmailError"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerPassword">Contraseña</label>
+                    <input type="password" id="registerPassword" name="password" required>
+                    <div class="password-requirements">
+                        Mínimo 8 caracteres, incluye mayúsculas, minúsculas y números
+                    </div>
+                    <div class="error-message" id="registerPasswordError"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">Confirmar Contraseña</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    <div class="error-message" id="confirmPasswordError"></div>
+                </div>
+                
+                <button type="submit" class="btn">Crear Cuenta</button>
+            </form>
+            
+            <div class="links">
+                <a href="#" onclick="showLoginForm()">¿Ya tienes cuenta? Inicia sesión</a>
+            </div>
+        </div>
+
+        <!-- Formulario de Recuperación de Contraseña -->
+        <div id="forgotForm" class="form-container hidden">
+            <div class="back-arrow" onclick="showLoginForm()">←</div>
+            <div class="form-title">Recuperar Contraseña</div>
+            
+            <div id="forgotSuccess" class="success-message"></div>
+            
+            <form>
+                <div class="form-group">
+                    <label for="forgotEmail">Email</label>
+                    <input type="email" id="forgotEmail" name="email" required>
+                    <div class="error-message" id="forgotEmailError"></div>
+                </div>
+                
+                <button type="submit" class="btn">Enviar Enlace de Recuperación</button>
+            </form>
+            
+            <div class="links">
+                <a href="#" onclick="showLoginForm()">Volver al inicio de sesión</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables para simular una base de datos
+        let users = JSON.parse(localStorage.getItem('users') || '[]');
+
+        // Funciones para cambiar entre formularios
+        function showLoginForm() {
+            hideAllForms();
+            document.getElementById('loginForm').classList.remove('hidden');
+            clearMessages();
+        }
+
+        function showRegisterForm() {
+            hideAllForms();
+            document.getElementById('registerForm').classList.remove('hidden');
+            clearMessages();
+        }
+
+        function showForgotForm() {
+            hideAllForms();
+            document.getElementById('forgotForm').classList.remove('hidden');
+            clearMessages();
+        }
+
+        function hideAllForms() {
+            document.querySelectorAll('.form-container').forEach(form => {
+                form.classList.add('hidden');
+            });
+        }
+
+        function clearMessages() {
+            document.querySelectorAll('.success-message').forEach(msg => {
+                msg.style.display = 'none';
+            });
+            document.querySelectorAll('.error-message').forEach(msg => {
+                msg.style.display = 'none';
+            });
+            document.querySelectorAll('input').forEach(input => {
+                input.classList.remove('error');
+            });
+        }
+
+        // Validaciones
+        function validateEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function validatePassword(password) {
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/;
+            return passwordRegex.test(password);
+        }
+
+        function showError(inputId, message) {
+            const input = document.getElementById(inputId);
+            const errorDiv = document.getElementById(inputId + 'Error');
+            input.classList.add('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function showSuccess(containerId, message) {
+            const successDiv = document.getElementById(containerId);
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+        }
+
+        // Manejo del formulario de login
+        document.getElementById('loginForm').querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            clearMessages();
+
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            let hasErrors = false;
+
+            if (!email) {
+                showError('loginEmail', 'Por favor ingresa tu email o usuario');
+                hasErrors = true;
+            }
+
+            if (!password) {
+                showError('loginPassword', 'Por favor ingresa tu contraseña');
+                hasErrors = true;
+            }
+
+            if (!hasErrors) {
+                // Verificar credenciales
+                const user = users.find(u => u.email === email && u.password === password);
+                
+                if (user) {
+                    showSuccess('loginSuccess', `¡Bienvenido, ${user.name}!`);
+                    // Aquí normalmente redirigiríamos a la página principal
+                    setTimeout(() => {
+                        alert('Login exitoso! En una aplicación real, serías redirigido a la página principal.');
+                    }, 1000);
+                } else {
+                    showError('loginEmail', 'Email o contraseña incorrectos');
+                    showError('loginPassword', 'Email o contraseña incorrectos');
+                }
+            }
+        });
+
+        // Manejo del formulario de registro
+        document.getElementById('registerForm').querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            clearMessages();
+
+            const name = document.getElementById('registerName').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            let hasErrors = false;
+
+            if (!name) {
+                showError('registerName', 'Por favor ingresa tu nombre completo');
+                hasErrors = true;
+            }
+
+            if (!email) {
+                showError('registerEmail', 'Por favor ingresa tu email');
+                hasErrors = true;
+            } else if (!validateEmail(email)) {
+                showError('registerEmail', 'Por favor ingresa un email válido');
+                hasErrors = true;
+            } else if (users.find(u => u.email === email)) {
+                showError('registerEmail', 'Este email ya está registrado');
+                hasErrors = true;
+            }
+
+            if (!password) {
+                showError('registerPassword', 'Por favor ingresa una contraseña');
+                hasErrors = true;
+            } else if (!validatePassword(password)) {
+                showError('registerPassword', 'La contraseña debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas y números');
+                hasErrors = true;
+            }
+
+            if (!confirmPassword) {
+                showError('confirmPassword', 'Por favor confirma tu contraseña');
+                hasErrors = true;
+            } else if (password !== confirmPassword) {
+                showError('confirmPassword', 'Las contraseñas no coinciden');
+                hasErrors = true;
+            }
+
+            if (!hasErrors) {
+                // Registrar usuario
+                const newUser = { name, email, password };
+                users.push(newUser);
+                localStorage.setItem('users', JSON.stringify(users));
+
+                showSuccess('registerSuccess', '¡Cuenta creada exitosamente! Ya puedes iniciar sesión.');
+                
+                // Limpiar formulario
+                document.getElementById('registerForm').querySelector('form').reset();
+                
+                // Cambiar a login después de 2 segundos
+                setTimeout(() => {
+                    showLoginForm();
+                }, 2000);
+            }
+        });
+
+        // Manejo del formulario de recuperación
+        document.getElementById('forgotForm').querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            clearMessages();
+
+            const email = document.getElementById('forgotEmail').value.trim();
+
+            if (!email) {
+                showError('forgotEmail', 'Por favor ingresa tu email');
+                return;
+            }
+
+            if (!validateEmail(email)) {
+                showError('forgotEmail', 'Por favor ingresa un email válido');
+                return;
+            }
+
+            // Verificar si el email existe
+            const userExists = users.find(u => u.email === email);
+            
+            if (userExists) {
+                showSuccess('forgotSuccess', 'Se ha enviado un enlace de recuperación a tu email.');
+            } else {
+                showError('forgotEmail', 'No existe una cuenta con este email');
+            }
+        });
+
+        // Agregar usuario de prueba si no existe
+        if (users.length === 0) {
+            users.push({
+                name: 'Usuario de Prueba',
+                email: 'test@example.com',
+                password: 'Test123456'
+            });
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+    </script>
+</body>
+</html>
