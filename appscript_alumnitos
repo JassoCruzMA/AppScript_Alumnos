@@ -1,1 +1,362 @@
+function doPost(e) {
+  // Configurar CORS para permitir requests desde tu página
+  const output = ContentService.createTextOutput();
+  output.setMimeType(ContentService.MimeType.JSON);
+  
+  try {
+    // Obtener la hoja de cálculo activa
+    const sheet = SpreadsheetApp.getActiveSheet();
+    
+    // Verificar que la hoja tenga los headers correctos
+    setupHeaders(sheet);
+    
+    // Parsear los datos JSON del POST
+    let data;
+    try {
+      data = JSON.parse(e.postData.contents);
+    } catch (parseError) {
+      Logger.log('Error parsing JSON: ' + parseError.toString());
+      return output.setContent(JSON.stringify({
+        success: false,
+        message: 'Datos JSON inválidos'
+      }));
+    }
+    
+    // Crear timestamp
+    const timestamp = new Date();
+    
+    // Log para debug
+    Logger.log('Received data: ' + JSON.stringify(data));
+    
+    // Manejar diferentes acciones
+    switch(data.action) {
+      case 'register':
+        return handleRegister(sheet, data, timestamp, output);
+        
+      case 'login':
+        return handleLogin(sheet, data, timestamp, output);
+        
+      case 'forgot_password':
+        return handleForgotPassword(sheet, data, timestamp, output);
+        
+      default:
+        Logger.log('Invalid action: ' + data.action);
+        return output.setContent(JSON.stringify({
+          success: false,
+          message: 'Acción no válida: ' + data.action
+        }));
+    }
+    
+  } catch (error) {
+    Logger.log('General error: ' + error.toString());
+    return output.setContent(JSON.stringify({
+      success: false,
+      message: 'Error interno del servidor: ' + error.toString()
+    }));
+  }
+}
+
+// Configurar headers si no existen
+function setupHeaders(sheet) {
+  const firstRow = sheet.getRange(1, 1, 1, 5).getValues()[0];
+  const expectedHeaders = ['timestamp', 'name', 'email', 'password', 'action'];
+  
+  // Si la primera fila está vacía o incorrecta, configurar headers
+  if (firstRow[0] !== 'timestamp') {
+    sheet.getRange(1, 1, 1, 5).setValues([expectedHeaders]);
+    
+    // Formatear headers
+    const headerRange = sheet.getRange(1, 1, 1, 5);
+    headerRange.setFontWeight('bold');
+    headerRange.setBackground('#4285f4');
+    headerRange.setFontColor('white');
+    
+    Logger.log('Headers configurados correctamente');
+  }
+}
+
+// Manejar registro de usuario
+function handleRegister(sheet, data, timestamp, output) {
+  try {
+    // Validar datos requeridos
+    if (!data.name || !data.email || !data.password) {
+      return output.setContent(JSON.stringify({
+        success: false,
+        message: 'Faltan datos requeridos (nombre, email, contraseña)'
+      }));
+    }
+    
+    // Verificar si el email ya existe
+    const existingUser = findUserByEmail(sheet, data.email);
+    if (existingUser) {
+      Logger.log('Email already exists: ' + data.email);
+      return output.setContent(JSON.stringify({
+        success: false,
+        message: 'El email ya está registrado'
+      }));
+    }
+    
+    // Registrar nuevo usuario
+    const rowData = [
+      timestamp,
+      data.name,
+      data.email,
+      data.password, // En producción, usar hash aquí
+      'register'
+    ];
+    
+    sheet.appendRow(rowData);
+    
+    Logger.log('User registered: ' + data.email);
+    
+    return output.setContent(JSON.stringify({
+      success: true,
+      message: 'Usuario registrado exitosamente'
+    }));
+    
+  } catch (error) {
+    Logger.log('Register error: ' + error.toString());
+    return output.setContent(JSON.stringify({
+      success: false,
+      message: 'Error en el registro: ' + error.toString()
+    }));
+  }
+}
+
+// Manejar login de usuario
+function handleLogin(sheet, data, timestamp, output) {
+  try {
+    // Validar datos requeridos
+    if (!data.email || !data.password) {
+      return output.setContent(JSON.stringify({
+        success: false,
+        message: 'Email y contraseña son requeridos'
+      }));
+    }
+    
+    // Verificar credenciales
+    const user = authenticateUser(sheet, data.email, data.password);
+    
+    if (user) {
+      // Registrar login exitoso
+      const rowData = [
+        timestamp,
+        user.name,
+        data.email,
+        '', // No almacenar password en logs
+        'login_success'
+      ];
+      
+      sheet.appendRow(rowData);
+      
+      Logger.log('Successful login: ' + data.email);
+      
+      return output.setContent(JSON.stringify({
+        success: true,
+        message: `¡Bienvenido, ${user.name}!`,
+        user: { 
+          name: user.name, 
+          email: user.email 
+        }
+      }));
+      
+    } else {
+      // Registrar intento fallido
+      const rowData = [
+        timestamp,
+        '',
+        data.email,
+        '',
+        'login_failed'
+      ];
+      
+      sheet.appendRow(rowData);
+      
+      Logger.log('Failed login attempt: ' + data.email);
+      
+      return output.setContent(JSON.stringify({
+        success: false,
+        message: 'Email o contraseña incorrectos'
+      }));
+    }
+    
+  } catch (error) {
+    Logger.log('Login error: ' + error.toString());
+    return output.setContent(JSON.stringify({
+      success: false,
+      message: 'Error en el login: ' + error.toString()
+    }));
+  }
+}
+
+// Manejar recuperación de contraseña
+function handleForgotPassword(sheet, data, timestamp, output) {
+  try {
+    // Validar email
+    if (!data.email) {
+      return output.setContent(JSON.stringify({
+        success: false,
+        message: 'Email es requerido'
+      }));
+    }
+    
+    // Verificar si el usuario existe
+    const user = findUserByEmail(sheet, data.email);
+    
+    if (user) {
+      // Registrar solicitud de recuperación
+      const rowData = [
+        timestamp,
+        user.name,
+        data.email,
+        '',
+        'password_reset_requested'
+      ];
+      
+      sheet.appendRow(rowData);
+      
+      Logger.log('Password reset requested: ' + data.email);
+      
+      // Aquí podrías integrar con Gmail API para enviar email real
+      return output.setContent(JSON.stringify({
+        success: true,
+        message: 'Se ha enviado un enlace de recuperación a tu email'
+      }));
+      
+    } else {
+      Logger.log('Password reset for non-existent user: ' + data.email);
+      
+      return output.setContent(JSON.stringify({
+        success: false,
+        message: 'No existe una cuenta con este email'
+      }));
+    }
+    
+  } catch (error) {
+    Logger.log('Forgot password error: ' + error.toString());
+    return output.setContent(JSON.stringify({
+      success: false,
+      message: 'Error en la recuperación: ' + error.toString()
+    }));
+  }
+}
+
+// Función para buscar usuario por email
+function findUserByEmail(sheet, email) {
+  try {
+    const data = sheet.getDataRange().getValues();
+    
+    // Empezar desde fila 2 (índice 1) para saltar headers
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      
+      // Verificar si es un registro de usuario (columna E = 'register')
+      if (row[2] === email && row[4] === 'register') {
+        return {
+          name: row[1],
+          email: row[2],
+          password: row[3]
+        };
+      }
+    }
+    
+    return null;
+    
+  } catch (error) {
+    Logger.log('Find user error: ' + error.toString());
+    return null;
+  }
+}
+
+// Función para autenticar usuario
+function authenticateUser(sheet, email, password) {
+  try {
+    const user = findUserByEmail(sheet, email);
+    
+    if (user && user.password === password) {
+      return user;
+    }
+    
+    return null;
+    
+  } catch (error) {
+    Logger.log('Authentication error: ' + error.toString());
+    return null;
+  }
+}
+
+// Función de prueba para verificar que todo funciona
+function testFunction() {
+  const sheet = SpreadsheetApp.getActiveSheet();
+  
+  // Configurar headers
+  setupHeaders(sheet);
+  
+  // Datos de prueba
+  const testData = {
+    action: 'register',
+    name: 'Usuario de Prueba',
+    email: 'test@ejemplo.com',
+    password: 'Test123456'
+  };
+  
+  // Simular POST request
+  const mockEvent = {
+    postData: {
+      contents: JSON.stringify(testData)
+    }
+  };
+  
+  const result = doPost(mockEvent);
+  Logger.log('Test result: ' + result.getContent());
+  
+  return result.getContent();
+}
+
+// Función para limpiar datos de prueba (útil durante desarrollo)
+function clearTestData() {
+  const sheet = SpreadsheetApp.getActiveSheet();
+  const lastRow = sheet.getLastRow();
+  
+  if (lastRow > 1) {
+    // Borrar todo excepto headers
+    sheet.deleteRows(2, lastRow - 1);
+    Logger.log('Test data cleared');
+  }
+}
+
+// Función para obtener estadísticas (bonus)
+function getStats() {
+  const sheet = SpreadsheetApp.getActiveSheet();
+  const data = sheet.getDataRange().getValues();
+  
+  let stats = {
+    totalUsers: 0,
+    totalLogins: 0,
+    failedLogins: 0,
+    passwordResets: 0
+  };
+  
+  for (let i = 1; i < data.length; i++) {
+    const action = data[i][4];
+    
+    switch(action) {
+      case 'register':
+        stats.totalUsers++;
+        break;
+      case 'login_success':
+        stats.totalLogins++;
+        break;
+      case 'login_failed':
+        stats.failedLogins++;
+        break;
+      case 'password_reset_requested':
+        stats.passwordResets++;
+        break;
+    }
+  }
+  
+  Logger.log('Stats: ' + JSON.stringify(stats));
+  return stats;
+}
 
