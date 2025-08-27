@@ -1,1 +1,12 @@
+/**
+ * 🧹 LIMPIAR CAMPOS DE LOGIN
+ * Limpia los campos de usuario y contraseña
+ */
+function limpiarCamposLogin() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hoja = ss.getActiveSheet();
+  
+  hoja.getRange(CONFIG_CELDAS.USUARIO_INPUT).clearContent();
+  hoja.getRange(CONFIG_CELDAS.CONTRASEÑA_INPUT).clearContent();
+}
 
