@@ -1,0 +1,7 @@
+/** Funciones - Google Sheets - Alumnitos 
+
+Import Range 
+=IMPORTRANGE("1WLpmSl7x8VwIgaQNWVzUZQ3SVQqlrQyh9gQxDYYHs4U/edit?gid=1028452386#gid=1028452386";"Datos!A:Q")
+
+Query - Import Range 
+=QUERY(IMPORTRANGE("1lPGQAImkWM7XXXA0HvT3SpnrMfLbYpoVMImyWY0_MxE";"Datos!A:R"); "SELECT * WHERE Col2 = "&B5&" ";1)
